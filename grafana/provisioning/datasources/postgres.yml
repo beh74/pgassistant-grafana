@@ -1,0 +1,27 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: pgAssistant Repository
+    orgId: 1
+
+datasources:
+  - name: pgAssistant Repository
+    uid: pgassistant_repository
+    orgId: 1
+    type: postgres
+    access: proxy
+    isDefault: true
+    editable: true
+    version: 1
+
+    url: ${PGASSISTANT_REPOSITORY_HOST}:${PGASSISTANT_REPOSITORY_PORT}
+    user: ${PGASSISTANT_REPOSITORY_USER}
+    database: ${PGASSISTANT_REPOSITORY_DATABASE}
+
+    secureJsonData:
+      password: ${PGASSISTANT_REPOSITORY_PASSWORD}
+
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1700
+      timescaledb: false

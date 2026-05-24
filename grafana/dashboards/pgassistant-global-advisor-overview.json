@@ -1,0 +1,825 @@
+{
+  "uid": "global-advisor-overview",
+  "title": "pgAssistant - Global Advisor Overview",
+  "tags": [
+    "pgassistant",
+    "postgresql",
+    "advisor",
+    "fleet"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 7,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "pgassistant_repository"
+        },
+        "refresh": 1,
+        "query": "SELECT DISTINCT environment AS __value, environment AS __text FROM pga_collection_run WHERE environment IS NOT NULL ORDER BY environment",
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "target_id",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "pgassistant_repository"
+        },
+        "refresh": 1,
+        "query": "SELECT DISTINCT target_id AS __value, target_id AS __text FROM pga_global_advisor_snapshot ORDER BY target_id",
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "advisor_group",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "pgassistant_repository"
+        },
+        "refresh": 1,
+        "query": "SELECT DISTINCT advisor_group AS __value, advisor_group AS __text FROM pga_global_advisor_snapshot WHERE advisor_group IS NOT NULL ORDER BY advisor_group",
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "priority",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "pgassistant_repository"
+        },
+        "refresh": 1,
+        "query": "SELECT DISTINCT priority AS __value, priority AS __text FROM pga_global_advisor_snapshot WHERE priority IS NOT NULL ORDER BY priority",
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "DBs with advisor snapshots in selected time range",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(DISTINCT g.target_id)\nFROM pga_global_advisor_snapshot g\nLEFT JOIN pga_collection_run r ON r.run_id = g.run_id\nWHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring});",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "DBs with findings in selected time range",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT count(DISTINCT target_id) FROM current_findings;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "High priority findings",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT count(*) FROM current_findings WHERE priority = 'HIGH';",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "High risk findings",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT count(*) FROM current_findings WHERE risk_level = 'HIGH';",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Manual only actions",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT count(*) FROM current_findings WHERE action_safety = 'MANUAL_ONLY';",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Requires maintenance window",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT count(*) FROM current_findings WHERE requires_maintenance_window IS TRUE;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "title": "Top databases to fix in selected time range",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT\n  target_id,\n  count(*) AS findings,\n  count(*) FILTER (WHERE priority = 'HIGH') AS high_priority,\n  count(*) FILTER (WHERE risk_level = 'HIGH') AS high_risk,\n  count(*) FILTER (WHERE action_safety = 'MANUAL_ONLY') AS manual_only,\n  count(*) FILTER (WHERE requires_lock IS TRUE) AS requires_lock,\n  count(*) FILTER (WHERE requires_maintenance_window IS TRUE) AS maintenance_window,\n  count(*) FILTER (\n    WHERE risk_level IN ('LOW','MEDIUM')\n      AND requires_lock IS FALSE\n      AND requires_maintenance_window IS FALSE\n      AND can_generate_sql IS TRUE\n  ) AS quick_wins,\n  round(avg(confidence)::numeric, 1) AS avg_confidence,\n  round(avg(impact)::numeric, 1) AS avg_impact,\n  max(rank_position) AS max_rank,\n  max(collected_at) AS last_collected_at,\n  (\n    count(*) FILTER (WHERE priority = 'HIGH') * 100 +\n    count(*) FILTER (WHERE risk_level = 'HIGH') * 80 +\n    count(*) FILTER (WHERE action_safety = 'MANUAL_ONLY') * 50 +\n    count(*) FILTER (WHERE requires_lock IS TRUE) * 40 +\n    count(*) FILTER (WHERE requires_maintenance_window IS TRUE) * 30 +\n    coalesce(max(rank_position), 0)\n  ) AS db_attention_score\nFROM current_findings\nGROUP BY target_id\nORDER BY db_attention_score DESC, high_priority DESC, high_risk DESC, findings DESC\nLIMIT 50;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "description": "Fleet-level prioritization based on the latest Global Advisor snapshot available inside the selected time range."
+    },
+    {
+      "id": 8,
+      "title": "Latest prioritized findings in selected time range",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT\n  g.target_id, g.rank_position, g.priority, g.risk_level, g.advisor_group, g.category_id,\n  g.action_type, g.action_safety, g.requires_lock, g.requires_maintenance_window,\n  g.object_type, g.schema_name, g.table_name, g.column_name, g.index_name,\n  g.title, g.recommendation_note, g.improvement_sql\nFROM current_findings g\nORDER BY\n  CASE g.priority WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  CASE g.risk_level WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  g.rank_position DESC NULLS LAST\nLIMIT 100;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "title": "Findings by advisor group",
+      "type": "barchart",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT coalesce(advisor_group, 'UNKNOWN') AS advisor_group, count(*) AS findings\nFROM current_findings\nGROUP BY 1\nORDER BY findings DESC;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "showValue": "auto",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.97,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "title": "Findings by category",
+      "type": "barchart",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT coalesce(category_id, 'UNKNOWN') AS category_id, count(*) AS findings\nFROM current_findings\nGROUP BY 1\nORDER BY findings DESC;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "showValue": "auto",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.97,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "title": "Actions by type",
+      "type": "barchart",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT coalesce(action_type, 'UNKNOWN') AS action_type, count(*) AS findings\nFROM current_findings\nGROUP BY 1\nORDER BY findings DESC;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "showValue": "auto",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.97,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "title": "Quick wins across databases",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT target_id, rank_position, priority, risk_level, action_type, action_safety, advisor_group, category_id, object_type, schema_name, table_name, index_name, title, improvement_sql\nFROM current_findings\nWHERE risk_level IN ('LOW','MEDIUM')\n  AND requires_lock IS FALSE\n  AND requires_maintenance_window IS FALSE\n  AND can_generate_sql IS TRUE\nORDER BY CASE priority WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC, rank_position DESC NULLS LAST\nLIMIT 50;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "title": "Manual / risky actions across databases",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  LEFT JOIN pga_collection_run r ON r.run_id = g.run_id\n  WHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\ncurrent_findings AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n  WHERE g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\n)\n\nSELECT target_id, rank_position, priority, risk_level, action_type, action_safety, requires_lock, requires_maintenance_window, manual_review_required, object_type, object_name, title, fix_strategy, improvement_sql\nFROM current_findings\nWHERE requires_lock IS TRUE\n   OR requires_maintenance_window IS TRUE\n   OR manual_review_required IS TRUE\n   OR action_safety = 'MANUAL_ONLY'\nORDER BY CASE risk_level WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC, rank_position DESC NULLS LAST\nLIMIT 50;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 14,
+      "title": "Findings trend by priority",
+      "type": "timeseries",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date_trunc('minute', g.collected_at) AS time,\n  coalesce(g.priority, 'UNKNOWN') AS metric,\n  count(*) AS findings\nFROM pga_global_advisor_snapshot g\nLEFT JOIN pga_collection_run r ON r.run_id = g.run_id\nWHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\n  AND g.advisor_group IN (${advisor_group:sqlstring})\n    AND g.priority IN (${priority:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "title": "Critical findings by database over time",
+      "type": "timeseries",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date_trunc('minute', g.collected_at) AS time,\n  g.target_id AS metric,\n  count(*) FILTER (WHERE g.priority = 'HIGH' OR g.risk_level = 'HIGH') AS critical_findings\nFROM pga_global_advisor_snapshot g\nLEFT JOIN pga_collection_run r ON r.run_id = g.run_id\nWHERE $__timeFilter(g.collected_at)\n  AND r.environment IN (${environment:sqlstring})\n  AND g.target_id IN (${target_id:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "title": "Recurring findings in selected time range",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pgassistant_repository"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pgassistant_repository"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  target_id,\n  finding_fingerprint,\n  min(collected_at) AS first_seen,\n  max(collected_at) AS last_seen,\n  count(DISTINCT run_id) AS occurrences,\n  max(priority) AS priority,\n  max(risk_level) AS risk_level,\n  max(advisor_group) AS advisor_group,\n  max(category_id) AS category_id,\n  max(object_type) AS object_type,\n  max(object_name) AS object_name,\n  max(title) AS title,\n  max(recommendation_note) AS recommendation_note\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(collected_at)\n  AND target_id IN (${target_id:sqlstring})\n  AND advisor_group IN (${advisor_group:sqlstring})\n  AND priority IN (${priority:sqlstring})\nGROUP BY target_id, finding_fingerprint\nORDER BY occurrences DESC, max(rank_position) DESC NULLS LAST\nLIMIT 100;",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    }
+  ]
+}

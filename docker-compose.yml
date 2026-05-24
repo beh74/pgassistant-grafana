@@ -1,0 +1,25 @@
+services:
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: pgassistant-grafana
+    ports:
+      - "3800:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+
+      PGASSISTANT_REPOSITORY_HOST: host.docker.internal
+      PGASSISTANT_REPOSITORY_PORT: 5433
+      PGASSISTANT_REPOSITORY_DATABASE: pga_collector
+      PGASSISTANT_REPOSITORY_USER: pga_collector
+      PGASSISTANT_REPOSITORY_PASSWORD: pga_collector
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+
+volumes:
+  grafana_data:
