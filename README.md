@@ -2,6 +2,13 @@
 
 This project provisions Grafana dashboards for the pgAssistant Collector repository.
 
+## Online DEMO
+
+- URL : https://ov-004f8b.infomaniak.ch/grafana/
+- User : admin
+- Password : pgassistant
+
+
 ## Dashboards
 
 - pgAssistant - Ranked Queries Overview
