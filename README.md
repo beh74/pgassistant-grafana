@@ -1,6 +1,6 @@
 # pgAssistant Grafana dashboards
 
-This project provisions Grafana dashboards for the pgAssistant Collector repository.
+This project provisions Grafana dashboards for the pgAssistant Collector repository (https://github.com/beh74/pgassistant-collector).
 
 ## Online DEMO
 
@@ -11,18 +11,15 @@ This project provisions Grafana dashboards for the pgAssistant Collector reposit
 
 ## Dashboards
 
+- pgAssistant - Fleet Evolution Overview
 - pgAssistant - Ranked Queries Overview
 - pgAssistant - Ranked Query Detail
 - pgAssistant - Global Advisor Overview
 - pgAssistant - Global Advisor Finding Detail
 
-The most important dashboard is **pgAssistant - Global Advisor Overview**. It is designed as a fleet-level action board: it ranks databases to fix first based on Global Advisor findings.
-
 ## Start
 
 ```bash
-cp .env.example .env
-# edit .env if needed
 docker compose up -d
 ```
 
@@ -35,12 +32,12 @@ http://localhost:3000
 Default login:
 
 ```text
-admin / admin
+admin / pgassistant
 ```
 
 ## PostgreSQL datasource
 
-The datasource is provisioned from `.env`:
+The datasource is provisioned from `docker-compose.yml`:
 
 ```env
 PGHOST=collector-repository
@@ -54,7 +51,7 @@ PGPASSWORD=pga_collector
 
 The overview is not primarily a per-database detail screen. Its first job is to answer:
 
-> Which databases should be corrected first?
+> Which databases should be corrected first and how to apply corrections ?
 
 The main table, **Top databases to fix**, computes a DB attention score from:
 

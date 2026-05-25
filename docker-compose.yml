@@ -1,12 +1,12 @@
 services:
   grafana:
-    image: grafana/grafana:11.6.0
+    image: grafana/grafana:12.4
     container_name: pgassistant-grafana
     ports:
       - "3800:3000"
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: pgassistant
       GF_USERS_ALLOW_SIGN_UP: "false"
 
       PGASSISTANT_REPOSITORY_HOST: host.docker.internal

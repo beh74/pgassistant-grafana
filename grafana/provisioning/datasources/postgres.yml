@@ -4,6 +4,8 @@ deleteDatasources:
   - name: pgAssistant Repository
     orgId: 1
 
+prune: true
+
 datasources:
   - name: pgAssistant Repository
     uid: pgassistant_repository
@@ -11,17 +13,21 @@ datasources:
     type: postgres
     access: proxy
     isDefault: true
-    editable: true
-    version: 1
+    editable: false
+    version: 4
 
-    url: ${PGASSISTANT_REPOSITORY_HOST}:${PGASSISTANT_REPOSITORY_PORT}
-    user: ${PGASSISTANT_REPOSITORY_USER}
-    database: ${PGASSISTANT_REPOSITORY_DATABASE}
+    url: $PGASSISTANT_REPOSITORY_HOST:$PGASSISTANT_REPOSITORY_PORT
+    user: $PGASSISTANT_REPOSITORY_USER
 
     secureJsonData:
-      password: ${PGASSISTANT_REPOSITORY_PASSWORD}
+      password: $PGASSISTANT_REPOSITORY_PASSWORD
 
     jsonData:
+      database: $PGASSISTANT_REPOSITORY_DATABASE
       sslmode: disable
+      maxOpenConns: 100
+      maxIdleConns: 100
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
       postgresVersion: 1700
       timescaledb: false
