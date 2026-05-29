@@ -19,6 +19,48 @@
   "templating": {
     "list": [
       {
+        "name": "bucket",
+        "type": "custom",
+        "label": "Time bucket",
+        "query": "minute,hour,day,week,month",
+        "current": {
+          "selected": true,
+          "text": "day",
+          "value": "day"
+        },
+        "options": [
+          {
+            "selected": false,
+            "text": "minute",
+            "value": "minute"
+          },
+          {
+            "selected": false,
+            "text": "hour",
+            "value": "hour"
+          },
+          {
+            "selected": true,
+            "text": "day",
+            "value": "day"
+          },
+          {
+            "selected": false,
+            "text": "week",
+            "value": "week"
+          },
+          {
+            "selected": false,
+            "text": "month",
+            "value": "month"
+          }
+        ],
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "skipUrlSync": false
+      },
+      {
         "name": "target_id",
         "type": "query",
         "datasource": {
@@ -139,7 +181,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n)\nSELECT max(collected_at) FROM filtered;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n)\nSELECT max(collected_at) FROM filtered;",
           "editorMode": "code"
         }
       ],
@@ -186,7 +228,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings;",
           "editorMode": "code"
         }
       ],
@@ -233,7 +275,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings WHERE priority = 'HIGH';",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings WHERE priority = 'HIGH';",
           "editorMode": "code"
         }
       ],
@@ -280,7 +322,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings WHERE risk_level = 'HIGH';",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings WHERE risk_level = 'HIGH';",
           "editorMode": "code"
         }
       ],
@@ -327,7 +369,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings WHERE requires_maintenance_window IS TRUE;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*) FROM current_findings WHERE requires_maintenance_window IS TRUE;",
           "editorMode": "code"
         }
       ],
@@ -374,7 +416,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*)\nFROM current_findings\nWHERE risk_level IN ('LOW','MEDIUM')\n  AND requires_lock IS FALSE\n  AND requires_maintenance_window IS FALSE\n  AND can_generate_sql IS TRUE;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT count(*)\nFROM current_findings\nWHERE risk_level IN ('LOW','MEDIUM')\n  AND requires_lock IS FALSE\n  AND requires_maintenance_window IS FALSE\n  AND can_generate_sql IS TRUE;",
           "editorMode": "code"
         }
       ],
@@ -421,7 +463,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  rank_position,\n  priority,\n  risk_level,\n  advisor_group,\n  category_id,\n  action_type,\n  action_safety,\n  requires_lock,\n  requires_maintenance_window,\n  object_type,\n  schema_name,\n  table_name,\n  column_name,\n  index_name,\n  title,\n  recommendation_note,\n  improvement_sql\nFROM current_findings\nORDER BY\n  CASE priority WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  CASE risk_level WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  rank_position DESC NULLS LAST\nLIMIT 200;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  rank_position,\n  priority,\n  risk_level,\n  advisor_group,\n  category_id,\n  action_type,\n  action_safety,\n  requires_lock,\n  requires_maintenance_window,\n  object_type,\n  schema_name,\n  table_name,\n  column_name,\n  index_name,\n  title,\n  recommendation_note,\n  improvement_sql\nFROM current_findings\nORDER BY\n  CASE priority WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  CASE risk_level WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  rank_position DESC NULLS LAST\nLIMIT 200;",
           "editorMode": "code"
         }
       ],
@@ -466,7 +508,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('minute', g.collected_at) AS time,\n  coalesce(g.priority, 'UNKNOWN') AS metric,\n  count(*) AS findings\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
+          "rawSql": "SELECT\n  date_trunc('${bucket:raw}', g.collected_at) AS time,\n  coalesce(g.priority, 'UNKNOWN') AS metric,\n  count(*) AS findings\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
           "editorMode": "code"
         }
       ],
@@ -509,7 +551,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('minute', g.collected_at) AS time,\n  coalesce(g.advisor_group, 'UNKNOWN') AS metric,\n  count(*) AS findings\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
+          "rawSql": "SELECT\n  date_trunc('${bucket:raw}', g.collected_at) AS time,\n  coalesce(g.advisor_group, 'UNKNOWN') AS metric,\n  count(*) AS findings\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
           "editorMode": "code"
         }
       ],
@@ -552,7 +594,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('minute', g.collected_at) AS time,\n  g.target_id AS metric,\n  count(*) FILTER (WHERE g.priority = 'HIGH' OR g.risk_level = 'HIGH') AS critical_findings\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
+          "rawSql": "SELECT\n  date_trunc('${bucket:raw}', g.collected_at) AS time,\n  g.target_id AS metric,\n  count(*) FILTER (WHERE g.priority = 'HIGH' OR g.risk_level = 'HIGH') AS critical_findings\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1, 2\nORDER BY 1;",
           "editorMode": "code"
         }
       ],
@@ -595,7 +637,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('minute', g.collected_at) AS time,\n  'requires_lock' AS metric,\n  count(*) FILTER (WHERE g.requires_lock IS TRUE) AS value\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1\n\nUNION ALL\n\nSELECT\n  date_trunc('minute', g.collected_at) AS time,\n  'requires_maintenance_window' AS metric,\n  count(*) FILTER (WHERE g.requires_maintenance_window IS TRUE) AS value\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1\nORDER BY 1;",
+          "rawSql": "SELECT\n  date_trunc('${bucket:raw}', g.collected_at) AS time,\n  'requires_lock' AS metric,\n  count(*) FILTER (WHERE g.requires_lock IS TRUE) AS value\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1\n\nUNION ALL\n\nSELECT\n  date_trunc('${bucket:raw}', g.collected_at) AS time,\n  'requires_maintenance_window' AS metric,\n  count(*) FILTER (WHERE g.requires_maintenance_window IS TRUE) AS value\nFROM pga_global_advisor_snapshot g\nWHERE $__timeFilter(g.collected_at)\n  AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\nGROUP BY 1\nORDER BY 1;",
           "editorMode": "code"
         }
       ],
@@ -726,7 +768,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\nhistorical_findings AS (\n  SELECT\n    g.target_id,\n    g.finding_fingerprint,\n    max(g.collected_at) AS last_seen_at,\n    max(g.priority) AS priority,\n    max(g.risk_level) AS risk_level,\n    max(g.advisor_group) AS advisor_group,\n    max(g.category_id) AS category_id,\n    max(g.title) AS title\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n  GROUP BY g.target_id, g.finding_fingerprint\n),\ncurrent_findings AS (\n  SELECT g.target_id, g.finding_fingerprint\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n)\nSELECT\n  h.last_seen_at,\n  h.target_id,\n  h.priority,\n  h.risk_level,\n  h.advisor_group,\n  h.category_id,\n  h.title\nFROM historical_findings h\nLEFT JOIN current_findings c\n  ON c.target_id = h.target_id\n AND c.finding_fingerprint = h.finding_fingerprint\nWHERE c.finding_fingerprint IS NULL\nORDER BY h.last_seen_at DESC\nLIMIT 100;",
+          "rawSql": "WITH latest_snapshot AS (\n  SELECT DISTINCT ON (g.target_id)\n      g.target_id,\n      g.run_id,\n      g.collected_at\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n  ORDER BY g.target_id, g.collected_at DESC\n),\nhistorical_findings AS (\n  SELECT\n    g.target_id,\n    g.finding_fingerprint,\n    max(g.collected_at) AS last_seen_at,\n    max(g.priority) AS priority,\n    max(g.risk_level) AS risk_level,\n    max(g.advisor_group) AS advisor_group,\n    max(g.category_id) AS category_id,\n    max(g.title) AS title\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n  GROUP BY g.target_id, g.finding_fingerprint\n),\ncurrent_findings AS (\n  SELECT g.target_id, g.finding_fingerprint\n  FROM pga_global_advisor_snapshot g\n  JOIN latest_snapshot ls\n    ON ls.target_id = g.target_id\n   AND ls.run_id = g.run_id\n)\nSELECT\n  h.last_seen_at,\n  h.target_id,\n  h.priority,\n  h.risk_level,\n  h.advisor_group,\n  h.category_id,\n  h.title\nFROM historical_findings h\nLEFT JOIN current_findings c\n  ON c.target_id = h.target_id\n AND c.finding_fingerprint = h.finding_fingerprint\nWHERE c.finding_fingerprint IS NULL\nORDER BY h.last_seen_at DESC\nLIMIT 100;",
           "editorMode": "code"
         }
       ],
@@ -770,7 +812,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  rank_position,\n  priority,\n  risk_level,\n  action_type,\n  action_safety,\n  advisor_group,\n  category_id,\n  object_type,\n  schema_name,\n  table_name,\n  index_name,\n  title,\n  improvement_sql\nFROM current_findings\nWHERE risk_level IN ('LOW','MEDIUM')\n  AND requires_lock IS FALSE\n  AND requires_maintenance_window IS FALSE\n  AND can_generate_sql IS TRUE\nORDER BY\n  CASE priority WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  rank_position DESC NULLS LAST\nLIMIT 100;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  rank_position,\n  priority,\n  risk_level,\n  action_type,\n  action_safety,\n  advisor_group,\n  category_id,\n  object_type,\n  schema_name,\n  table_name,\n  index_name,\n  title,\n  improvement_sql\nFROM current_findings\nWHERE risk_level IN ('LOW','MEDIUM')\n  AND requires_lock IS FALSE\n  AND requires_maintenance_window IS FALSE\n  AND can_generate_sql IS TRUE\nORDER BY\n  CASE priority WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  rank_position DESC NULLS LAST\nLIMIT 100;",
           "editorMode": "code"
         }
       ],
@@ -814,7 +856,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  rank_position,\n  priority,\n  risk_level,\n  action_type,\n  action_safety,\n  requires_lock,\n  requires_maintenance_window,\n  manual_review_required,\n  object_type,\n  object_name,\n  title,\n  fix_strategy,\n  improvement_sql\nFROM current_findings\nWHERE requires_lock IS TRUE\n   OR requires_maintenance_window IS TRUE\n   OR manual_review_required IS TRUE\n   OR action_safety = 'MANUAL_ONLY'\nORDER BY\n  CASE risk_level WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  rank_position DESC NULLS LAST\nLIMIT 100;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  rank_position,\n  priority,\n  risk_level,\n  action_type,\n  action_safety,\n  requires_lock,\n  requires_maintenance_window,\n  manual_review_required,\n  object_type,\n  object_name,\n  title,\n  fix_strategy,\n  improvement_sql\nFROM current_findings\nWHERE requires_lock IS TRUE\n   OR requires_maintenance_window IS TRUE\n   OR manual_review_required IS TRUE\n   OR action_safety = 'MANUAL_ONLY'\nORDER BY\n  CASE risk_level WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,\n  rank_position DESC NULLS LAST\nLIMIT 100;",
           "editorMode": "code"
         }
       ],
@@ -858,7 +900,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n  AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n  AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n  AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n  AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  finding_fingerprint,\n  title,\n  raw_payload\nFROM current_findings\nORDER BY rank_position DESC NULLS LAST\nLIMIT 50;",
+          "rawSql": "WITH filtered AS (\n  SELECT g.*\n  FROM pga_global_advisor_snapshot g\n  WHERE $__timeFilter(g.collected_at)\n    AND g.target_id IN (${target_id:sqlstring})\n    AND coalesce(g.advisor_group, 'UNKNOWN') IN (${advisor_group:sqlstring})\n    AND coalesce(g.priority, 'UNKNOWN') IN (${priority:sqlstring})\n    AND coalesce(g.risk_level, 'UNKNOWN') IN (${risk_level:sqlstring})\n    AND g.finding_fingerprint IN (${finding_fingerprint:sqlstring})\n),\nlatest_snapshot AS (\n  SELECT DISTINCT ON (target_id)\n      target_id,\n      run_id,\n      collected_at\n  FROM filtered\n  ORDER BY target_id, collected_at DESC\n),\ncurrent_findings AS (\n  SELECT f.*\n  FROM filtered f\n  JOIN latest_snapshot ls\n    ON ls.target_id = f.target_id\n   AND ls.run_id = f.run_id\n)\nSELECT\n  target_id,\n  finding_fingerprint,\n  title,\n  raw_payload\nFROM current_findings\nORDER BY rank_position DESC NULLS LAST\nLIMIT 50;",
           "editorMode": "code"
         }
       ],
