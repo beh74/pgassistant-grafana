@@ -16,6 +16,7 @@ This project provisions Grafana dashboards for the pgAssistant Collector reposit
 - pgAssistant - Ranked Query Detail
 - pgAssistant - Global Advisor Overview
 - pgAssistant - Global Advisor Finding Detail
+- pgAssistant - Recommendations Evolution
 
 ## Start
 
